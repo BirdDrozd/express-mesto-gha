@@ -1,26 +1,40 @@
 const express = require('express');
+const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
-const router = require('./routes/cards');
-
-const { PORT = 3000, DB_URL = 'mongodb://localhost:27017/mestodb' } = process.env;
-
-mongoose.connect(DB_URL, {
-  useNewUrlParser: true,
-}).then(() => console.log('Connected to mongodb'));
+const usersRouter = require('./routes/users');
+const cardsRouter = require('./routes/cards');
+const {
+  MONGODB_URI = 'mongodb://localhost:27017/mestodb',
+  PORT = 3000,
+} = process.env;
 
 const app = express();
 
-app.use(express.json());
-
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 app.use((req, res, next) => {
   req.user = {
-    _id: '64ec865e62f9ac04d9ccccff',
+    _id: '64ec868362f9ac04d9cccd00',
   };
   next();
 });
-
-app.use(router);
-
-app.listen(PORT, () => {
-  console.log(`App listening on port ${PORT}`);
+app.use('/cards', cardsRouter);
+app.use('/users', usersRouter);
+app.use('*', (req, res) => {
+  res.status(404).send({
+    message: 'Запрашиваемый адрес не найден.',
+  });
 });
+const startServer = async () => {
+  try {
+    await mongoose.connect(MONGODB_URI, {
+      useNewUrlParser: true,
+    });
+    console.log('Подключено к MongoDB');
+    await app.listen(PORT);
+    console.log(`Сервер запущен на порте: ${PORT}`);
+  } catch (err) {
+    console.log('Ошибка подключения к MongoDB', err);
+  }
+};
+startServer();
