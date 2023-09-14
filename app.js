@@ -1,30 +1,38 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
+const helmet = require('helmet');
 const usersRouter = require('./routes/users');
 const cardsRouter = require('./routes/cards');
+
 const {
-  MONGODB_URI = 'mongodb://localhost:27017/mestodb',
+  MONGODB_URI = 'mongodb://127.0.0.1:27017/mestodb',
   PORT = 3000,
 } = process.env;
 
 const app = express();
 
+app.use(helmet());
+
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
+
 app.use((req, res, next) => {
   req.user = {
     _id: '64ec868362f9ac04d9cccd00',
   };
   next();
 });
+
 app.use('/cards', cardsRouter);
 app.use('/users', usersRouter);
+
 app.use('*', (req, res) => {
   res.status(404).send({
     message: 'Запрашиваемый адрес не найден.',
   });
 });
+
 const startServer = async () => {
   try {
     await mongoose.connect(MONGODB_URI, {
@@ -37,4 +45,5 @@ const startServer = async () => {
     console.log('Ошибка подключения к MongoDB', err);
   }
 };
+
 startServer();
