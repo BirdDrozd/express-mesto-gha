@@ -15,3 +15,22 @@ https://github.com/BirdDrozd/express-mesto-gha
 
 `npm run start` — запускает сервер   
 `npm run dev` — запускает сервер с hot-reload
+
+
+
+# Mesto project frontend + backend
+
+https://github.com/BirdDrozd/express-mesto-gha
+
+## Directories
+
+`/routes` - folder with router files  
+`/controllers` - folder with user and card controller files   
+`/models` - folder with files of user and card schemes description.  
+  
+The other directories are auxiliary, created by the developer if necessary.
+
+## Project start
+
+`npm run start` - starts the server   
+`npm run dev` - starts the server with hot-reloading 

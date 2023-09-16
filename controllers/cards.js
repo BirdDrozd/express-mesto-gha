@@ -1,89 +1,82 @@
-const Card = require('../models/card');
-const createCard = async (req, res, next) => {
-  try {
-    const { name, link } = req.body;
-    const card = await Card.create({ name, link, owner: req.user._id });
-    res.status(201).send(card);
-  } catch (err) {
-    if (err.name === 'ValidationError') {
-      next(res.status(400).send({
-        message: 'Переданы некорректные данные при создании карточки.',
-      }));
-    } else {
-      next(res.status(500).send({
-        message: 'На сервере произошла ошибка',
-      }));
-    }
-  }
-};
-const getCards = async (req, res, next) => {
-  try {
-    const cards = await Card.find({});
+const { HTTP_STATUS_BAD_REQUEST } = require('http2').constants;
+const cardModel = require('../models/card');
+const mongoose = require('mongoose');
 
-    res.send(cards);
-  } catch (err) {
-    next(res.status(500).send({
-      message: 'На сервере произошла ошибка',
-    }));
-  }
+const {
+  NotFoundError,
+  NotAuthorizedError,
+  ForbiddenError } = require('../errors/errors');
+
+const getCards = (req, res) => cardModel.find({})
+  .then((r) => res.status(200).send(r))
+  .catch(err => next(err));
+
+const createCard = (req, res, next) => {
+  const { name, link, owner = req.user._id } = req.body;
+  return cardModel.create({ name, link, owner })
+    .then((r) => res.status(201).send(r))
+    .catch(err => next(err));
 };
 
-const deleteCard = async (req, res, next) => {
+const deleteCardById = async (req, res, next) => {
   try {
-    const card = await Card.findByIdAndDelete(req.params.id);
+    const cardId = req.params.cardId;
+
+    const card = await cardModel.findById(cardId);
+
     if (!card) {
-      res.status(404).send({
-        message: 'Карточка с указанным _id не найдена.',
-      });
+      next(new NotFoundError("Карточка пользователя не найдена"));
+      return
     }
-    res.send(card);
-  } catch (err) {
-    if (err.name === 'CastError') {
-      res.status(400).send({
-        message: 'Переданы некорректные данные.',
-      });
-    } else {
-      next(res.status(500).send({
-        message: 'На сервере произошла ошибка',
-      }));
+
+    if (card.owner.toString() !== req.user._id) {
+      next(new ForbiddenError("Вы не можете удалять чужую карточку"));
+      return
     }
+
+    await cardModel.findByIdAndDelete(cardId);
+    return res.status(200).send(card);
+
+  } catch {
+    next(new Error("Ошибка при удалении карточки пользователя"));
   }
 };
-const handleCardLike = async (req, res, next) => {
-  try {
-    let action;
-    if (req.method === 'PUT') {
-      action = '$addToSet';
-    }
-    if (req.method === 'DELETE') {
-      action = '$pull';
-    }
-    const card = await Card.findByIdAndUpdate(
-      req.params.id,
-      { [action]: { likes: req.user._id } },
-      { new: true },
-    );
-    if (!card) {
-      res.status(404).send({
-        message: 'Передан несуществующий _id карточки.',
-      });
-    }
-    res.send(card);
-  } catch (err) {
-    if (err.name === 'CastError') {
-      res.status(400).send({
-        message: 'Переданы некорректные данные для постановки/снятии лайка.',
-      });
-    } else {
-      next(res.status(500).send({
-        message: 'На сервере произошла ошибка',
-      }));
-    }
-  }
+
+const addLikeById = (req, res, next) => {
+  const { cardId } = req.params;
+  return cardModel.findByIdAndUpdate(
+    cardId,
+    { $addToSet: { likes: req.user._id } },
+    { new: true },
+  )
+    .then((r) => {
+      if (r === null) {
+        throw new NotFoundError("Карточка не найдена")
+      }
+      return res.status(200).send(r);
+    })
+    .catch(err => next(err));
 };
+
+const removeLikeById = (req, res, next) => {
+  return cardModel.findByIdAndUpdate(
+    req.params.cardId,
+    { $pull: { likes: req.user._id } },
+    { new: true },
+  )
+    .then((r) => {
+      if (r === null) {
+        throw new NotFoundError("Карточка не найдена")
+      }
+      return res.status(200).send(r);
+    })
+    .catch(err => next(err));
+};
+
 module.exports = {
-  createCard,
   getCards,
-  deleteCard,
-  handleCardLike,
+  createCard,
+  deleteCardById,
+  addLikeById,
+  removeLikeById,
 };

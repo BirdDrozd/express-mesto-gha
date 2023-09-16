@@ -1,49 +1,81 @@
 const express = require('express');
-const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
 const helmet = require('helmet');
-const usersRouter = require('./routes/users');
-const cardsRouter = require('./routes/cards');
+const cardRouter = require('./routes/cards');
+const userRouter = require('./routes/users');
+const { auth } = require('./middlewares/auth');
+const cookieParser = require('cookie-parser');
+const { celebrate, Joi, errors } = require('celebrate');
+const { NotFoundError } = require('./errors/errors');
+const urlPattern = new RegExp(
+  "^((http|https):\\/\\/)?(www\\.)?[a-zA-Z0-9-]+(\\.[a-zA-Z]{2,6})+[a-zA-Z0-9-._~:\\/?#\\[\\]@!$&'()*+,;=]*$"
+);
+
+const emailPattern = new RegExp(
+  "^[^\s@]+@[^\s@]+\.[^\s@]+$"
+);
 
 const {
-  MONGODB_URI = 'mongodb://127.0.0.1:27017/mestodb',
+  createUser,
+  login
+} = require('./controllers/users');
+
+const {
   PORT = 3000,
+  DB_URL = 'mongodb://127.0.0.1:27017/mestodb',
 } = process.env;
 
+mongoose.connect(DB_URL, {
+  useNewUrlParser: true,
+});
+
 const app = express();
-
 app.use(helmet());
+app.use(cookieParser());
+app.use(express.static('public'));
+app.use(express.json());
 
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
+
+app.post('/signin', celebrate({
+  body: Joi.object().keys({
+    email: Joi.string().required().email(),
+    password: Joi.string().required().min(8),
+  }),
+}),login);
+
+app.post('/signup', celebrate({
+  body: Joi.object().keys({
+    email: Joi.string().required().email(),
+    password: Joi.string().required().min(8),
+    name: Joi.string().min(2).max(30),
+    about: Joi.string().min(2).max(30),
+    avatar: Joi.string().pattern(urlPattern),
+  }),
+}),createUser);
+
+app.use(auth);
+
+app.use('/users', userRouter);
+app.use('/cards', cardRouter);
+
+app.use(errors());
 
 app.use((req, res, next) => {
-  req.user = {
-    _id: '64ec868362f9ac04d9cccd00',
-  };
-  next();
-});
+  next(new NotFoundError('Страница не найдена'));
+})
 
-app.use('/cards', cardsRouter);
-app.use('/users', usersRouter);
+app.use((err, req, res, next) => {
+  const { statusCode = 500, message } = err;
 
-app.use('*', (req, res) => {
-  res.status(404).send({
-    message: 'Запрашиваемый адрес не найден.',
-  });
-});
-
-const startServer = async () => {
-  try {
-    await mongoose.connect(MONGODB_URI, {
-      useNewUrlParser: true,
+  res
+    .status(statusCode)
+    .send({
+      message: statusCode === 500
+        ? 'На сервере произошла ошибка'
+        : message
     });
-    console.log('Подключено к MongoDB');
-    await app.listen(PORT);
-    console.log(`Сервер запущен на порте: ${PORT}`);
-  } catch (err) {
-    console.log('Ошибка подключения к MongoDB', err);
-  }
-};
+});
 
-startServer();
+app.listen(PORT, () => {
+
+});
