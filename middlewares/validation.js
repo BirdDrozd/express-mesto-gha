@@ -19,8 +19,6 @@ const signinValidation = celebrate({
   }),
 });
 
-
-
 module.exports = {
   signupValidation,
   signinValidation,
