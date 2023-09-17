@@ -1,5 +1,7 @@
 const { celebrate, Joi } = require('celebrate');
 
+const urlPattern = /^((http|https):\/\/)?(www\.)?[a-zA-Z0-9-]+(\.[a-zA-Z]{2,6})+[a-zA-Z0-9-._~:/?#[\]@!$&'()*+,;=]*$/;
+
 const signupValidation = celebrate({
   body: Joi.object().keys({
     email: Joi.string().required().email(),
@@ -17,4 +19,10 @@ const signinValidation = celebrate({
   }),
 });
 
-module.exports = { signupValidation, signinValidation };
+
+
+module.exports = {
+  signupValidation,
+  signinValidation,
+  urlPattern,
+};

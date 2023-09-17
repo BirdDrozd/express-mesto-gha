@@ -1,4 +1,4 @@
-const { HTTP_STATUS_BAD_REQUEST } = require('http2').constants;
+const { urlPattern } = require('../middlewares/validation');
 const cardModel = require('../models/card');
 const mongoose = require('mongoose');
 
@@ -37,7 +37,7 @@ const deleteCardById = async (req, res, next) => {
     await cardModel.findByIdAndDelete(cardId);
     return res.status(200).send(card);
 
-  } catch {
+  } catch (err) {
     next(new Error("Ошибка при удалении карточки пользователя"));
   }
 };
