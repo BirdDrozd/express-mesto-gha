@@ -1,19 +1,16 @@
 const router = require('express').Router();
-const { celebrate, Joi, errors } = require('celebrate');
+const { celebrate, Joi } = require('celebrate');
 Joi.objectId = require('joi-objectid')(Joi);
 
 const {
   getUsers,
-  createUser,
   getUserById,
   updateAvatarById,
   updateUserById,
   getCurrentUser,
 } = require('../controllers/users');
 
-const urlPattern = new RegExp(
-  "^((http|https):\\/\\/)?(www\\.)?[a-zA-Z0-9-]+(\\.[a-zA-Z]{2,6})+[a-zA-Z0-9-._~:\\/?#\\[\\]@!$&'()*+,;=]*$",
-);
+const urlPattern = /^((http|https):\/\/)?(www\.)?[a-zA-Z0-9-]+(\.[a-zA-Z]{2,6})+[a-zA-Z0-9-._~:/?#[\]@!$&'()*+,;=]*$/;
 
 router.get('/me', getCurrentUser);
 

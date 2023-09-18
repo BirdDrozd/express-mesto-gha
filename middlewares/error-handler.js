@@ -1,5 +1,3 @@
-const { NotFoundError } = require('../errors/errors');
-
 const errorHandler = (err, req, res, next) => {
   const { statusCode = 500, message } = err;
 

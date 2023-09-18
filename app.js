@@ -2,11 +2,11 @@ const express = require('express');
 const mongoose = require('mongoose');
 const helmet = require('helmet');
 const cookieParser = require('cookie-parser');
-const { celebrate, Joi, errors } = require('celebrate');
+const { errors } = require('celebrate')
 const cardRouter = require('./routes/cards');
 const userRouter = require('./routes/users');
 const { auth } = require('./middlewares/auth');
-const { NotFoundError } = require('./errors/errors');
+const { NotFoundError } = require('./errors/NotFoundError');
 const { login, createUser } = require('./controllers/users');
 
 const {

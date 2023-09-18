@@ -8,9 +8,7 @@ const {
   addLikeById,
 } = require('../controllers/cards');
 
-const urlPattern = new RegExp(
-  "^((http|https):\\/\\/)?(www\\.)?[a-zA-Z0-9-]+(\\.[a-zA-Z]{2,6})+[a-zA-Z0-9-._~:\\/?#\\[\\]@!$&'()*+,;=]*$",
-);
+const urlPattern = /^((http|https):\/\/)?(www\.)?[a-zA-Z0-9-]+(\.[a-zA-Z]{2,6})+[a-zA-Z0-9-._~:/?#[\]@!$&'()*+,;=]*$/;
 
 router.delete('/:cardId', celebrate({
   params: Joi.object().keys({

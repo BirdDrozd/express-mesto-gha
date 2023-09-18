@@ -2,11 +2,9 @@ const mongoose = require('mongoose');
 const { urlPattern } = require('../middlewares/validation');
 const cardModel = require('../models/card');
 
-const {
-  NotFoundError,
-  NotAuthorizedError,
-  ForbiddenError,
-} = require('../errors/errors');
+const { NotFoundError } = require('../errors/NotFoundError');
+const { NotAuthorizedError } = require('../errors/NotAuthorizedError');
+const { ForbiddenError } = require('../errors/ForbiddenError');
 
 const getCards = (req, res) => cardModel.find({})
   .then((r) => res.status(200).send(r))

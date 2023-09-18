@@ -1,14 +1,11 @@
-const { HTTP_STATUS_BAD_REQUEST } = require('http2').constants;
 const validator = require('validator');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { urlPattern } = require('../middlewares/validation');
 const userModel = require('../models/user');
-const {
-  ConflictError,
-  NotFoundError,
-  NotAuthorizedError,
-} = require('../errors/errors');
+const { ConflictError } = require('../errors/ConflictError');
+const { NotFoundError } = require('../errors/NotFoundError');
+const { NotAuthorizedError } = require('../errors/NotAuthorizedError');
 
 const SALT_ROUNDS = 10;
 const JWT_SECRET = 'supersecretstring';
